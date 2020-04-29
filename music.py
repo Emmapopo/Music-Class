@@ -1,6 +1,6 @@
 import sys
 import OutputClass
-from music_controller import MusicController
+from controller import music_controller
 from pathlib import Path
 import os
 from model import database
@@ -39,7 +39,7 @@ def main():
 
     db = database.Database('musicdb.sqlite')
     outputInstance = OutputClass.Output()
-    musicInstance = MusicController(db)
+    musicInstance = music_controller.MusicController(db)
     m1 = App(outputInstance, musicInstance)
 
     if '-all' in arguments and '-s' not in arguments :
