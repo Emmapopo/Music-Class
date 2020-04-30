@@ -1,6 +1,6 @@
 import sqlite3
 
-conn = sqlite3.connect('musicdb.sqlite')
+conn = sqlite3.connect('musicdb.sqlite', check_same_thread = False)
 cur = conn.cursor()
 
 cur.execute('DROP TABLE IF EXISTS Music')
@@ -675,4 +675,4 @@ I'm jaded (I'm jaded), can't fake it (Can't fake it)
 I don't belong in this club", '3:43')''')
 
 conn.commit()
-cur.close()
+conn.close()

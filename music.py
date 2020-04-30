@@ -1,3 +1,5 @@
+from  flask import Flask, jsonify, request
+from flask_restful import Resource, Api, reqparse
 import sys
 import OutputClass
 from controller import music_controller
@@ -6,6 +8,7 @@ import os
 from model import database
 
 arguments =  str(sys.argv)
+
 class App:
     def __init__(self, outputInstance, musicController):
         self.output = outputInstance
@@ -13,49 +16,56 @@ class App:
 
     def allmusic(self):
         record = self.music.get_all()
+        dict = {}
         for music in record:
-            self.output.print('id', music.id, ' Title:', music.title, '  Artist', music.artist_name, '   Duration', music.duration)
+            dict.update({music.id:{'Title':music.title, 'Artist': music.artist_name, 'Duration':music.duration }})
+        return dict
+           
 
     def searchmusic(self, s):
-        record = self.music.search(s)
-        count = 0
+        record = self.music.search(s) 
+        dict = {}
         for music in record:
-            self.output.print('id', music.id, ' Title:', music.title, '  Artist', music.artist_name, '   Duration', music.duration)
-            count = count + 1
-        if count == 0:
-            self.output.print('No matches')
+             dict.update({music.id:{'Title':music.title, 'Artist': music.artist_name, 'Duration':music.duration }})
+        return dict
 
     def extractmusic(self, id):
+        dict={}
         music = self.music.get(id)
-        self.output.print('id:', music.id)
-        self.output.print('title:', music.title)
-        self.output.print('Artist:', music.artist_name)
-        self.output.print('Duration:', music.duration)
-        self.output.print('Lyrics:', music.lyrics)
+        dict.update({music.id:{'Title':music.title, 'Artist': music.artist_name, 'Duration':music.duration , 'Lyrics': music.lyrics}})
+        return dict
+       
 
-def main():
-    if not Path('musicdb.sqlite').is_file():
-        os.system("python ./musicdb.py")
 
-    db = database.Database('musicdb.sqlite')
-    outputInstance = OutputClass.Output()
-    musicInstance = music_controller.MusicController(db)
-    m1 = App(outputInstance, musicInstance)
+if not Path('musicdb.sqlite').is_file():
+    os.system("python ./musicdb.py")
 
-    if '-all' in arguments and '-s' not in arguments :
-        m1.allmusic()
+db = database.Database('musicdb.sqlite')
+outputInstance = OutputClass.Output()
+musicInstance = music_controller.MusicController(db)
+m1 = App(outputInstance, musicInstance)
 
-    elif '-all' in arguments and '-s' in arguments:
-        s = sys.argv[2][3:]
-        s = str(s)
-        s = s.lower()
-        m1.searchmusic(s)
+app = Flask(__name__)
+api = Api(app)
 
-    elif '-id' in arguments:
-        id = sys.argv[1][4:]
-        id = int(id)
-        m1.extractmusic(id)
-    else:
-        print('Check input argument to ensure it conforms with the assigned flag convention')
 
-main()
+@app.route('/musics/')
+def get():
+    all = m1.allmusic()
+    return jsonify(all)
+
+@app.route('/musics/<music_id>')
+def getone(music_id):
+    one = m1.extractmusic(music_id)
+    return jsonify(one)
+
+@app.route('/musics/q=<search_term>')
+def getsearched(search_term):
+    ser = m1.searchmusic(search_term)
+    return jsonify(ser)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
