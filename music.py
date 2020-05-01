@@ -1,4 +1,4 @@
-from  flask import Flask, jsonify, request
+from  flask import Flask, jsonify, request, make_response
 from flask_restful import Resource, Api, reqparse
 import sys
 import OutputClass
@@ -6,6 +6,8 @@ from controller import music_controller
 from pathlib import Path
 import os
 from model import database
+import json
+from json import dumps
 
 arguments =  str(sys.argv)
 
@@ -16,24 +18,18 @@ class App:
 
     def allmusic(self):
         record = self.music.get_all()
-        dict = {}
-        for music in record:
-            dict.update({music.id:{'Title':music.title, 'Artist': music.artist_name, 'Duration':music.duration }})
-        return dict
+        result = map(lambda x: x.__dict__, record) 
+        return list(result) 
            
 
     def searchmusic(self, s):
         record = self.music.search(s) 
-        dict = {}
-        for music in record:
-             dict.update({music.id:{'Title':music.title, 'Artist': music.artist_name, 'Duration':music.duration }})
-        return dict
+        result = map(lambda x: x.__dict__, record) 
+        return list(result) 
 
     def extractmusic(self, id):
-        dict={}
         music = self.music.get(id)
-        dict.update({music.id:{'Title':music.title, 'Artist': music.artist_name, 'Duration':music.duration , 'Lyrics': music.lyrics}})
-        return dict
+        return music.__dict__
        
 
 
@@ -52,17 +48,18 @@ api = Api(app)
 @app.route('/musics/')
 def get():
     all = m1.allmusic()
-    return jsonify(all)
+    return jsonify({"status":"success","data": all})
 
 @app.route('/musics/<music_id>')
 def getone(music_id):
     one = m1.extractmusic(music_id)
-    return jsonify(one)
+    return jsonify({"status":"success","data": one})
 
-@app.route('/musics/q=<search_term>')
-def getsearched(search_term):
+@app.route('/musics/search')
+def getsearched():
+    search_term = request.args.get('q')
     ser = m1.searchmusic(search_term)
-    return jsonify(ser)
+    return jsonify({"status":"success","data": ser})
 
 
 if __name__ == '__main__':

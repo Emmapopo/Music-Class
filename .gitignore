@@ -3,3 +3,4 @@ Music.docx
 schema.sql
 .vscode
 musicdb.sqlite
+*/__pycache__/*
